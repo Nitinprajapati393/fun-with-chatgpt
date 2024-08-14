@@ -3,7 +3,7 @@ name: CI Pipeline
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
       - main
@@ -29,17 +29,34 @@ jobs:
       - name: Start Flask application
         run: |
           nohup python run.py &
-          echo "Flask application started"
           sleep 10  # Wait for the Flask app to start
+
+      - name: Download ngrok
+        run: |
+          curl -s https://ngrok.com/download | tar xz
+
+      - name: Start ngrok
+        run: |
+          ./ngrok http 5000 > ngrok.log &
+          sleep 10  # Wait for ngrok to start
+
+      - name: Retrieve ngrok URL
+        id: ngrok
+        run: |
+          curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' > ngrok_url.txt
+          cat ngrok_url.txt
+        env:
+          NGROK_TOKEN: ${{ secrets.NGROK_TOKEN }}
 
       - name: Verify Flask application is running
         run: |
-          curl --fail http://127.0.0.1:5000 || exit 1
+          curl --fail $(cat ngrok_url.txt) || exit 1
 
       - name: Run tests
         run: |
           python -m pytest -v
 
-    #   - name: Stop Flask application
-    #     run: |
-    #       pkill -f 'python run.py'
+      - name: Stop Flask application and ngrok
+        run: |
+          pkill -f 'python run.py'
+          pkill -f 'ngrok'
