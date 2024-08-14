@@ -41,15 +41,24 @@ jobs:
           ./ngrok http 5000 > ngrok.log &
           sleep 10  # Wait for ngrok to start
 
+      - name: Debug ngrok logs
+        run: cat ngrok.log
+
       - name: Retrieve ngrok URL
         id: ngrok
         run: |
           curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' > ngrok_url.txt
+          echo "ngrok URL:"
           cat ngrok_url.txt
 
       - name: Verify Flask application is running
         run: |
-          curl --fail $(cat ngrok_url.txt) || exit 1
+          URL=$(cat ngrok_url.txt)
+          if [ -z "$URL" ]; then
+            echo "ngrok URL is empty!"
+            exit 1
+          fi
+          curl --fail $URL || exit 1
 
       - name: Run tests
         run: |
