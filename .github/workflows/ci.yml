@@ -29,15 +29,19 @@ jobs:
       - name: Start Flask application
         run: |
           nohup python run.py &
-          sleep 5  # Give the server some time to start
+          sleep 5
 
       - name: Check if Flask app is running
         run: |
           curl --fail http://127.0.0.1:5000 || exit 1
 
+      - name: List installed packages
+        run: |
+          pip list
+
       - name: Run tests
         run: |
-          pytest  # or other tests that make HTTP requests to the running app
+          python -m pytest
 
       - name: Stop Flask application
         run: |
