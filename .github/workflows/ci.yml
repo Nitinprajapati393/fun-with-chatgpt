@@ -40,6 +40,6 @@ jobs:
         run: |
           python -m pytest -v
 
-      - name: Stop Flask application
-        run: |
-          pkill -f 'python run.py'
+    #   - name: Stop Flask application
+    #     run: |
+    #       pkill -f 'python run.py'
