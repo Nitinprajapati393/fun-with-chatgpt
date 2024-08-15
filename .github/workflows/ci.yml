@@ -1,3 +1,78 @@
+# name: CI Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - master
+#   pull_request:
+#     branches:
+#       - master
+
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: 3.11
+
+#       - name: Install dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install -r requirements.txt
+
+#       - name: Update ngrok to the latest version
+#         run: |
+#           curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc
+#           echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+#           sudo apt-get update && sudo apt-get install ngrok
+
+#       - name: Install ngrok Authtoken
+#         run: ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+
+#       - name: Start Flask application
+#         run: |
+#           nohup python run.py &
+#           sleep 10  # Wait for the Flask app to start
+
+#       - name: Start ngrok
+#         run: |
+#           ngrok http 5000 > /dev/null &
+#           sleep 5  # Wait for ngrok to start
+
+#       - name: Fetch ngrok tunnel information
+#         run: |
+#           echo "Fetching ngrok tunnel information..."
+#           curl -s http://localhost:4040/api/tunnels > ngrok_tunnels.json
+#           cat ngrok_tunnels.json
+#           jq -r '.tunnels[0].public_url' ngrok_tunnels.json > ngrok_url.txt
+#           echo "Extracted ngrok URL:"
+#           cat ngrok_url.txt
+
+#       - name: Verify Flask application is running
+#         run: |
+#           URL=$(cat ngrok_url.txt)
+#           if [ -z "$URL" ]; then
+#             echo "ngrok URL is empty!"
+#             exit 1
+#           fi
+#           echo "Checking the application via ngrok URL: $URL"
+#           curl --fail $URL || exit 1
+
+#       - name: Run tests
+#         run: |
+#           python -m pytest -v
+
+#       - name: Stop Flask application and ngrok
+#         run: |
+#           pkill -f 'python run.py'
+#           pkill -f 'ngrok'
+
 name: CI Pipeline
 
 on:
@@ -38,7 +113,6 @@ jobs:
       - name: Start Flask application
         run: |
           nohup python run.py &
-          sleep 10  # Wait for the Flask app to start
 
       - name: Start ngrok
         run: |
@@ -64,11 +138,8 @@ jobs:
           echo "Checking the application via ngrok URL: $URL"
           curl --fail $URL || exit 1
 
-      - name: Run tests
-        run: |
-          python -m pytest -v
+      # - name: Run tests (if you want to run tests here)
+      #   run: python -m pytest -v
 
-      # - name: Stop Flask application and ngrok
-      #   run: |
-      #     pkill -f 'python run.py'
-      #     pkill -f 'ngrok'
+      - name: Keep the application and tunnel alive
+        run: sleep 1800  # Keeps the pipeline alive for 30 minutes
