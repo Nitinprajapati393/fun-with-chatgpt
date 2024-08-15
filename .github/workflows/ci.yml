@@ -26,15 +26,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Download ngrok
+      - name: Update ngrok to the latest version
         run: |
-          wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
-          unzip ngrok-stable-linux-amd64.zip
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt-get update && sudo apt-get install ngrok
 
       - name: Install ngrok Authtoken
         run: ./ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-        shell: /usr/bin/bash -e {0}
-        
 
       - name: Start Flask application
         run: |
@@ -43,14 +42,10 @@ jobs:
 
       - name: Start ngrok
         run: |
-          ./ngrok http 5000 > ngrok.log &
-          sleep 10  # Wait for ngrok to start
+          ./ngrok http 5000 > /dev/null &
+          sleep 5  # Wait for ngrok to start
 
-      - name: Debug ngrok logs
-        run: cat ngrok.log
-
-      - name: Retrieve ngrok Tunnel Info
-        id: ngrok
+      - name: Fetch ngrok tunnel information
         run: |
           echo "Fetching ngrok tunnel information..."
           curl -s http://localhost:4040/api/tunnels > ngrok_tunnels.json
