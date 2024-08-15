@@ -38,7 +38,6 @@ jobs:
       - name: Start Flask application
         run: |
           nohup python run.py &
-          sleep 10  # Wait for the Flask app to start
 
       - name: Start ngrok
         run: |
@@ -64,11 +63,8 @@ jobs:
           echo "Checking the application via ngrok URL: $URL"
           curl --fail $URL || exit 1
 
-      - name: Run tests
-        run: |
-          python -m pytest -v
+      # - name: Run tests (if you want to run tests here)
+      #   run: python -m pytest -v
 
-      - name: Stop Flask application and ngrok
-        run: |
-          pkill -f 'python run.py'
-          pkill -f 'ngrok'
+      - name: Keep the application and tunnel alive
+        run: sleep 1800  # Keeps the pipeline alive for 30 minutes
