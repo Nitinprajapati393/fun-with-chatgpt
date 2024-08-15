@@ -31,6 +31,10 @@ jobs:
           wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
           unzip ngrok-stable-linux-amd64.zip
 
+      - name: Install ngrok Authtoken
+        run: |
+          ./ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+
       - name: Start Flask application
         run: |
           nohup python run.py &
@@ -44,11 +48,14 @@ jobs:
       - name: Debug ngrok logs
         run: cat ngrok.log
 
-      - name: Retrieve ngrok URL
+      - name: Retrieve ngrok Tunnel Info
         id: ngrok
         run: |
-          curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url' > ngrok_url.txt
-          echo "ngrok URL:"
+          echo "Fetching ngrok tunnel information..."
+          curl -s http://localhost:4040/api/tunnels > ngrok_tunnels.json
+          cat ngrok_tunnels.json
+          jq -r '.tunnels[0].public_url' ngrok_tunnels.json > ngrok_url.txt
+          echo "Extracted ngrok URL:"
           cat ngrok_url.txt
 
       - name: Verify Flask application is running
@@ -58,6 +65,7 @@ jobs:
             echo "ngrok URL is empty!"
             exit 1
           fi
+          echo "Checking the application via ngrok URL: $URL"
           curl --fail $URL || exit 1
 
       - name: Run tests
