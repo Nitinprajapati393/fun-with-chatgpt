@@ -68,7 +68,7 @@ jobs:
         run: |
           python -m pytest -v
 
-      - name: Stop Flask application and ngrok
-        run: |
-          pkill -f 'python run.py'
-          pkill -f 'ngrok'
+      # - name: Stop Flask application and ngrok
+      #   run: |
+      #     pkill -f 'python run.py'
+      #     pkill -f 'ngrok'
